@@ -16,7 +16,7 @@ get_availability_data () {
 	    "moreThanOneDay": true,
 	    "isLogedinReq": false
 	}'
-	cat avail1.txt | jq '{From: .from, To: .to, TrainName: .trainName, TrainNo: .trainNo, Status:.avlDayList[] | {DOJ: .availablityDate, Availability: .availablityStatus}}' | mail -s "Availability Status for $1 on $2 from $3 to $4 in class $5" shankershawn@gmail.com,nairitamganai@gmail.com,tkganaintpc@gmail.com
+	cat avail1.txt | jq '{Timestamp: .timeStamp, TrainName: .trainName, TrainNo: .trainNo, From: .from, To: .to, Class: .enqClass, Quota: .quota}, {Status: .avlDayList[] | {DOJ: .availablityDate, Availability: .availablityStatus}}' | mail -s "Availability Status for $1 on $2 from $3 to $4 in class $5 in quota $6" $7
 	rm avail1.txt
 }
 
