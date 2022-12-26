@@ -1,23 +1,10 @@
 #!/bin/bash
 get_availability_data () {
-	nanoseconds=$(date +%s%N | cut -b1-13)
+	#nanoseconds=$(date +%s%N | cut -b1-13)
 	isSendMail="N"
-	curl --location -o data1.txt --request POST 'https://www.irctc.co.in/eticketing/protected/mapps1/avlFarenquiry/'$1'/'$2'/'$3'/'$4'/'$5'/'$6'/N' \
-	--header 'Accept:  application/json, text/plain, */*' \
-	--header 'bmirak:  webbm' \
-	--header 'Content-Language:  en' \
-	--header 'Content-Type:  application/json; charset=UTF-8' \
-	--header 'greq: $nanoseconds' \
-	--data-raw '{
-	    "paymentFlag": "N",
-	    "concessionBooking": false,
-	    "ftBooking": false,
-	    "loyaltyRedemptionBooking": false,
-	    "ticketType": "E",
-	    "moreThanOneDay": true,
-	    "isLogedinReq": false
-	}'
-	if [ "$(jq .trainNo data1.txt)" != null ]
+	curl --location -o data1.txt --request GET 'https://securedapi.confirmtkt.com/api/platform/trainbooking/avlFareenquiry?trainNo='$1'&travelClass='$2'&quota='$3'&fromStnCode='$4'&destStnCode='$5'&doj='$6'&token=204F97FDBEBA275624E386BD688AE83E94E87D37364787DC5AD51D3C05E47F58&planZeroCan=RO-E1&appVersion=290'
+
+	if [ "$(jq -R 'fromjson? | .trainName' data1.txt)" != null ] && [ "$(jq -R 'fromjson? | .trainName' data1.txt)" != "" ]
 	then
 		if [ -f "data_$1_$2_$3_$4_$5_$6.txt" ]
 		then
@@ -36,7 +23,7 @@ get_availability_data () {
 
 		if [ "$isSendMail" = "Y" ]
 		then
-			cat data1.txt | jq '{Timestamp: .timeStamp, TrainName: .trainName, TrainNo: .trainNo, From: .from, To: .to, Class: .enqClass, Quota: .quota}, {Status: .avlDayList[] | {DOJ: .availablityDate, Availability: .availablityStatus}}' | mail -s "Availability Status for $1 on $2 from $3 to $4 in class $5 in quota $6" $7
+			cat data1.txt | jq '{Timestamp: .timeStamp, TrainName: .trainName, TrainNo: .trainNo, From: .from, To: .to, Class: .enqClass, Quota: .quota}, {Status: .avlDayList[] | {DOJ: .availablityDate, Availability: .availablityStatus}}' | mail -s "Availability Status for $1 on $6 from $4 to $5 in class $2 in quota $3" $7
 			if [ "$8" = "Y" ]
 			then
 				curl --location --request POST 'http://129.154.37.114:5001/v1/message/battery_level' \
@@ -54,5 +41,6 @@ get_availability_data () {
 
 while IFS= read -r line
 do
+	find . -maxdepth 1 -type f -mtime +7 -name 'data*.txt' -exec rm {} \;
 	get_availability_data $line
 done < availability_list.txt
