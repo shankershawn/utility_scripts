@@ -6,6 +6,7 @@ do
 	if [ ${#trainNo} -ne 0 ]
 	then
 		isSendMail="N"
+		emailReplyPrefix=""
 		trainName=$(cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.TrainName')
 		doj=$(cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.Doj')
 		boardingPoint=$(cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.BoardingPoint')
@@ -14,6 +15,7 @@ do
 		cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.PassengerStatus[] | {Passenger: .Number, BookingStatus: .BookingStatus, CurrentStatus: .CurrentStatus, Prediction: .Prediction, ConfirmationStatus: .ConfirmTktStatus} | with_entries( select( .value != null ) )' >> pnr_temp_$pnr.txt
 		if [ -f "pnr_data_$pnr.txt" ]
 		then
+			emailReplyPrefix="Re:"
 			diffVal=$(diff pnr_temp_$pnr.txt pnr_data_$pnr.txt)
 			diffValLength=${#diffVal}
 			if [ $diffValLength -gt 0 ]
@@ -26,7 +28,7 @@ do
 		mv pnr_temp_$pnr.txt pnr_data_$pnr.txt
 		if [ "$isSendMail" = "Y" ]
 		then
-			cat pnr_data_$pnr.txt | mail -s "PNR $pnr - $trainNo - $trainName - $doj - $boardingPoint to $reservationUpto - $class" shankershawn@gmail.com,nairitamganai@gmail.com,tkganaintpc@gmail.com
+			cat pnr_data_$pnr.txt | mail -s "$emailReplyPrefix PNR $pnr - $trainNo - $trainName - $doj - $boardingPoint to $reservationUpto - $class" shankershawn@gmail.com,nairitamganai@gmail.com,tkganaintpc@gmail.com
 			curl --location --request POST 'http://129.154.37.114:5001/v1/message/battery_level' \
 			--header 'Content-Type: application/json' \
 			--data-raw '{
