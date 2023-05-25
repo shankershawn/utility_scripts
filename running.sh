@@ -10,8 +10,8 @@ get_running_data () {
 		if [ -f "run_data_$1_$2_$3_$4.txt" ]
 		then
 			emailReplyPrefix="Re:"
-			jq '.rakes[] | select( .startDate | contains("27 Apr 2023")) | .stations[] | select(.stops | contains(1)) | select(.arr == true) | {"station code": .scode, "station name": .sname, "arrival": .actArr, "departure": .actDep, "delay": .delayDep}' run_data1.txt >> temp1.txt
-			jq '.rakes[] | select( .startDate | contains("27 Apr 2023")) | .stations[] | select(.stops | contains(1)) | select(.arr == true) | {"station code": .scode, "station name": .sname, "arrival": .actArr, "departure": .actDep, "delay": .delayDep}' run_data_$1_$2_$3_$4.txt >> temp2.txt
+			DATE="$2 $3 $4" jq '[.rakes[] | select(.startDate == env.DATE) | .stations[] | select(.stops | contains(1)) | select(.arr == true) | select(.delay != -1)] | sort_by(.distance) | last | {"station code": .scode, "station name": .sname, "arrival": .actArr, "departure": .actDep, "delay": .delayDep}' run_data1.txt >> temp1.txt
+			DATE="$2 $3 $4" jq '[.rakes[] | select(.startDate == env.DATE) | .stations[] | select(.stops | contains(1)) | select(.arr == true) | select(.delay != -1)] | sort_by(.distance) | last | {"station code": .scode, "station name": .sname, "arrival": .actArr, "departure": .actDep, "delay": .delayDep}' run_data_$1_$2_$3_$4.txt >> temp2.txt
 			diffVal=$(diff temp1.txt temp2.txt)
 			rm  temp1.txt temp2.txt
 			diffValLength=${#diffVal}
@@ -25,7 +25,7 @@ get_running_data () {
 
 		if [ "$isSendMail" = "Y" ]
 		then
-			cat run_data1.txt | jq '.rakes[] | select( .startDate | contains("27 Apr 2023")) | .stations[] | select(.stops | contains(1)) | select(.arr == true) | {"station code": .scode, "station name": .sname, "arrival": .actArr, "departure": .actDep, "delay": .delayDep}' | mail -s "$emailReplyPrefix Running Status for $1 on $2-$3-$4" $5
+			cat run_data1.txt | DATE="$2 $3 $4" jq '[.rakes[] | select(.startDate == env.DATE) | .stations[] | select(.stops | contains(1)) | select(.arr == true) | select(.delay != -1)] | sort_by(.distance) | last | {"station code": .scode, "station name": .sname, "arrival": .actArr, "departure": .actDep, "delay": .delayDep}' | mail -s "$emailReplyPrefix Running Status for $1 on $2-$3-$4" $5
 			if [ "$6" = "Y" ]
 			then
 				curl --location --request POST 'http://129.154.37.114:5001/v1/message/battery_level' \
