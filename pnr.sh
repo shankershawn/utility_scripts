@@ -12,7 +12,7 @@ do
 		boardingPoint=$(cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.BoardingPoint')
 		reservationUpto=$(cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.ReservationUpto')
 		class=$(cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.Class')
-		cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '.PassengerStatus[] | {Passenger: .Number, BookingStatus: .BookingStatus, CurrentStatus: .CurrentStatus, Prediction: .Prediction, ConfirmationStatus: .ConfirmTktStatus} | with_entries( select( .value != null ) )' >> pnr_temp_$pnr.txt
+		cat out1.txt | grep BookingStatusIndex | sed 's|data = ||' | sed 's|};|}|' | jq -r '[.PassengerStatus[] | {Passenger: .Number, BookingStatus: .BookingStatus, CurrentStatus: .CurrentStatus, Prediction: .Prediction, ConfirmationStatus: .ConfirmTktStatus} | with_entries( select( .value != null ) )]' >> pnr_temp_$pnr.txt
 		if [ -f "pnr_data_$pnr.txt" ]
 		then
 			emailReplyPrefix="Re:"
